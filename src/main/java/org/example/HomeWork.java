@@ -5,7 +5,7 @@ import java.util.List;
 public class HomeWork {
     // Задача 1
     public static boolean isEven(int n) {
-            return n % 2 == 0;
+        return n % 2 == 0;
     }
 
     // Задача 2
@@ -124,16 +124,16 @@ public class HomeWork {
     }
 
     // Задача 12
-        public static List<String> removeSpecificName(List<String> list, String nameToRemove) {
-            List<String> result = new ArrayList<>();
+    public static List<String> removeSpecificName(List<String> list, String nameToRemove) {
+        List<String> result = new ArrayList<>();
 
-            for (String name : list) {
-                if (!name.equals(nameToRemove)) {
-                    result.add(name);
-                }
+        for (String name : list) {
+            if (!name.equals(nameToRemove)) {
+                result.add(name);
             }
-
-            return result;
         }
+
+        return result;
+    }
 }
 
