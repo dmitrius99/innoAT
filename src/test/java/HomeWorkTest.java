@@ -1,6 +1,6 @@
 import org.example.HomeWork;
 import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@Tag("homework")
 public class HomeWorkTest {
 
     private static final Random RANDOM = new Random();
@@ -17,532 +22,201 @@ public class HomeWorkTest {
         return RANDOM.ints(10, 0, 101);
     }
 
-    // ==========================================
-    // @Test
-    // ==========================================
-
-    @Test
+    @RepeatedTest(10)
     void basicMethodsTest() {
-
         int number = RANDOM.nextInt(101);
         int age = RANDOM.nextInt(101);
 
-        // isEven
-        boolean expectedEven = number % 2 == 0;
-        boolean actualEven = HomeWork.isEven(number);
-
-        if (expectedEven == actualEven) {
-            System.out.println("isEven -> TEST PASSED");
-        } else {
-            System.out.println("isEven -> TEST FAILED");
-        }
-
-        // isPositive
-        boolean expectedPositive = number > 0;
-        boolean actualPositive = HomeWork.isPositive(number);
-
-        if (expectedPositive == actualPositive) {
-            System.out.println("isPositive -> TEST PASSED");
-        } else {
-            System.out.println("isPositive -> TEST FAILED");
-        }
-
-        // checkAccess
-        String expectedAccess = age > 18 ? "Allowed" : "Denied";
-        String actualAccess = HomeWork.checkAccess(age);
-
-        if (expectedAccess.equals(actualAccess)) {
-            System.out.println("checkAccess -> TEST PASSED");
-        } else {
-            System.out.println("checkAccess -> TEST FAILED");
-        }
+        assertExpected(number % 2 == 0, HomeWork.isEven(number), "isEven", number);
+        assertExpected(number > 0, HomeWork.isPositive(number), "isPositive", number);
+        assertExpected(age > 18 ? "Allowed" : "Denied", HomeWork.checkAccess(age), "checkAccess", age);
     }
 
-    @Test
+    @RepeatedTest(10)
     void gradeAndBlastOffTest() {
-
         int score = RANDOM.nextInt(101);
-
-        String expectedGrade;
-
-        if (score <= 20)
-            expectedGrade = "E";
-        else if (score <= 40)
-            expectedGrade = "D";
-        else if (score <= 60)
-            expectedGrade = "C";
-        else if (score <= 80)
-            expectedGrade = "B";
-        else
-            expectedGrade = "A";
-
-        if (expectedGrade.equals(HomeWork.getGrade(score))) {
-            System.out.println("getGrade -> TEST PASSED");
-        } else {
-            System.out.println("getGrade -> TEST FAILED");
-        }
+        assertExpected(expectedGrade(score), HomeWork.getGrade(score), "getGrade", score);
 
         int start = RANDOM.nextInt(10) + 1;
-
-        StringBuilder expectedBlastOff = new StringBuilder();
-
-        for (int i = start; i >= 1; i--) {
-            expectedBlastOff.append(i).append(" ");
-        }
-
-        expectedBlastOff.append("Поехали!");
-
-        if (expectedBlastOff.toString().equals(HomeWork.blastOff(start))) {
-            System.out.println("blastOff -> TEST PASSED");
-        } else {
-            System.out.println("blastOff -> TEST FAILED");
-        }
+        assertExpected(expectedBlastOff(start), HomeWork.blastOff(start), "blastOff", start);
     }
 
-    @Test
+    @RepeatedTest(10)
+    void getGradeForNegativeScoreShouldFail() {
+        int score = -1;
+        String expected = "Error";
+        String actual = HomeWork.getGrade(score);
+
+        assertEquals(expected, actual,
+                () -> "getGrade failed for score=" + score + ": expected=" + expected + ", actual=" + actual);
+    }
+
+    @RepeatedTest(10)
     void numbersTest() {
-
         int number = RANDOM.nextInt(100) + 1;
-
-        int expectedSum = number * (number + 1) / 2;
-
-        if (expectedSum == HomeWork.sumToN(number)) {
-            System.out.println("sumToN -> TEST PASSED");
-        } else {
-            System.out.println("sumToN -> TEST FAILED");
-        }
+        assertExpected(number * (number + 1) / 2, HomeWork.sumToN(number), "sumToN", number);
 
         int end = number + 10;
-
-        StringBuilder expected = new StringBuilder();
-
-        for (int i = number; i <= end; i++) {
-
-            if (i % 2 == 0) {
-
-                if (expected.length() > 0) {
-                    expected.append(" ");
-                }
-
-                expected.append(i);
-            }
-        }
-
-        if (expected.toString().equals(HomeWork.getEvenInRange(number, end))) {
-            System.out.println("getEvenInRange -> TEST PASSED");
-        } else {
-            System.out.println("getEvenInRange -> TEST FAILED");
-        }
+        assertExpected(expectedEvenRange(number, end), HomeWork.getEvenInRange(number, end),
+                "getEvenInRange", "start=" + number + ", end=" + end);
     }
 
-    @Test
+    @RepeatedTest(10)
     void collectionsTest() {
-
-        String[] messages = {"Info", "Bug", "Warning"};
-
-        if (HomeWork.hasBug(messages)) {
-            System.out.println("hasBug -> TEST PASSED");
-        } else {
-            System.out.println("hasBug -> TEST FAILED");
-        }
-
-        int[] array = {5, 8, 2, 10, 4};
-
-        if (HomeWork.findMax(array) == 10) {
-            System.out.println("findMax -> TEST PASSED");
-        } else {
-            System.out.println("findMax -> TEST FAILED");
-        }
-
-        String[] reversed = HomeWork.reverse(new String[]{"One", "Two", "Three"});
-
-        if (reversed[0].equals("Three")
-                && reversed[1].equals("Two")
-                && reversed[2].equals("One")) {
-
-            System.out.println("reverse -> TEST PASSED");
-
-        } else {
-
-            System.out.println("reverse -> TEST FAILED");
-        }
-
-        List<Integer> numbers = List.of(2, 4, 6);
-
-        if (HomeWork.calcAverage(numbers) == 4.0) {
-            System.out.println("calcAverage -> TEST PASSED");
-        } else {
-            System.out.println("calcAverage -> TEST FAILED");
-        }
-
-        List<String> names = List.of("Ann", "Bob", "Ann", "Tom");
-
-        List<String> expected =
-                List.of("Bob", "Tom");
-
-        if (expected.equals(HomeWork.removeSpecificName(names, "Ann"))) {
-            System.out.println("removeSpecificName -> TEST PASSED");
-        } else {
-            System.out.println("removeSpecificName -> TEST FAILED");
-        }
+        assertTrue(HomeWork.hasBug(new String[]{"Info", "Bug", "Warning"}),
+                "hasBug: expected=true, actual=false for messages [Info, Bug, Warning]");
+        assertExpected(10, HomeWork.findMax(new int[]{5, 8, 2, 10, 4}), "findMax", "[5, 8, 2, 10, 4]");
+        assertArrayExpected(new String[]{"Three", "Two", "One"},
+                HomeWork.reverse(new String[]{"One", "Two", "Three"}), "reverse", "[One, Two, Three]");
+        assertExpected(4.0, HomeWork.calcAverage(List.of(2, 4, 6)), 0.0, "calcAverage", "[2, 4, 6]");
+        assertExpected(List.of("Bob", "Tom"), HomeWork.removeSpecificName(List.of("Ann", "Bob", "Ann", "Tom"), "Ann"),
+                "removeSpecificName", "names=[Ann, Bob, Ann, Tom], name=Ann");
     }
-    // ==========================================
-    // @RepeatedTest
-    // ==========================================
 
     @RepeatedTest(10)
     void basicMethodsRepeatedTest() {
-
-        int number = RANDOM.nextInt(101);
-        int age = RANDOM.nextInt(101);
-
-        // isEven
-        boolean expectedEven = number % 2 == 0;
-        boolean actualEven = HomeWork.isEven(number);
-
-        if (expectedEven == actualEven) {
-            System.out.println("isEven -> TEST PASSED");
-        } else {
-            System.out.println("isEven -> TEST FAILED");
-        }
-
-        // isPositive
-        boolean expectedPositive = number > 0;
-        boolean actualPositive = HomeWork.isPositive(number);
-
-        if (expectedPositive == actualPositive) {
-            System.out.println("isPositive -> TEST PASSED");
-        } else {
-            System.out.println("isPositive -> TEST FAILED");
-        }
-
-        // checkAccess
-        String expectedAccess = age > 18 ? "Allowed" : "Denied";
-        String actualAccess = HomeWork.checkAccess(age);
-
-        if (expectedAccess.equals(actualAccess)) {
-            System.out.println("checkAccess -> TEST PASSED");
-        } else {
-            System.out.println("checkAccess -> TEST FAILED");
-        }
+        runBasicMethodsAssertions();
     }
 
     @RepeatedTest(10)
     void gradeAndBlastOffRepeatedTest() {
-
-        int score = RANDOM.nextInt(101);
-
-        String expectedGrade;
-
-        if (score <= 20)
-            expectedGrade = "E";
-        else if (score <= 40)
-            expectedGrade = "D";
-        else if (score <= 60)
-            expectedGrade = "C";
-        else if (score <= 80)
-            expectedGrade = "B";
-        else
-            expectedGrade = "A";
-
-        if (expectedGrade.equals(HomeWork.getGrade(score))) {
-            System.out.println("getGrade -> TEST PASSED");
-        } else {
-            System.out.println("getGrade -> TEST FAILED");
-        }
-
-        int start = RANDOM.nextInt(10) + 1;
-
-        StringBuilder expectedBlastOff = new StringBuilder();
-
-        for (int i = start; i >= 1; i--) {
-            expectedBlastOff.append(i).append(" ");
-        }
-
-        expectedBlastOff.append("Поехали!");
-
-        if (expectedBlastOff.toString().equals(HomeWork.blastOff(start))) {
-            System.out.println("blastOff -> TEST PASSED");
-        } else {
-            System.out.println("blastOff -> TEST FAILED");
-        }
+        runGradeAndBlastOffAssertions();
     }
 
     @RepeatedTest(10)
     void numbersRepeatedTest() {
-
-        int number = RANDOM.nextInt(100) + 1;
-
-        int expectedSum = number * (number + 1) / 2;
-
-        if (expectedSum == HomeWork.sumToN(number)) {
-            System.out.println("sumToN -> TEST PASSED");
-        } else {
-            System.out.println("sumToN -> TEST FAILED");
-        }
-
-        int end = number + 10;
-
-        StringBuilder expectedRange = new StringBuilder();
-
-        for (int i = number; i <= end; i++) {
-
-            if (i % 2 == 0) {
-
-                if (expectedRange.length() > 0) {
-                    expectedRange.append(" ");
-                }
-
-                expectedRange.append(i);
-            }
-        }
-
-        if (expectedRange.toString().equals(HomeWork.getEvenInRange(number, end))) {
-            System.out.println("getEvenInRange -> TEST PASSED");
-        } else {
-            System.out.println("getEvenInRange -> TEST FAILED");
-        }
+        runNumbersAssertions();
     }
 
     @RepeatedTest(10)
     void collectionsRepeatedTest() {
-
-        String[] messages = {"Info", "Bug", "Warning"};
-
-        if (HomeWork.hasBug(messages)) {
-            System.out.println("hasBug -> TEST PASSED");
-        } else {
-            System.out.println("hasBug -> TEST FAILED");
-        }
-
-        int[] array = {5, 8, 2, 10, 4};
-
-        if (HomeWork.findMax(array) == 10) {
-            System.out.println("findMax -> TEST PASSED");
-        } else {
-            System.out.println("findMax -> TEST FAILED");
-        }
-
-        String[] reversed = HomeWork.reverse(new String[]{"One", "Two", "Three"});
-
-        if (reversed[0].equals("Three")
-                && reversed[1].equals("Two")
-                && reversed[2].equals("One")) {
-
-            System.out.println("reverse -> TEST PASSED");
-
-        } else {
-
-            System.out.println("reverse -> TEST FAILED");
-        }
-
-        List<Integer> numbers = List.of(2, 4, 6);
-
-        if (HomeWork.calcAverage(numbers) == 4.0) {
-            System.out.println("calcAverage -> TEST PASSED");
-        } else {
-            System.out.println("calcAverage -> TEST FAILED");
-        }
-
-        List<String> names = List.of("Ann", "Bob", "Ann", "Tom");
-
-        List<String> expected =
-                List.of("Bob", "Tom");
-
-        if (expected.equals(HomeWork.removeSpecificName(names, "Ann"))) {
-            System.out.println("removeSpecificName -> TEST PASSED");
-        } else {
-            System.out.println("removeSpecificName -> TEST FAILED");
-        }
+        runCollectionsAssertions();
     }
-    // ==========================================
-    // @ParameterizedTest
-    // ==========================================
 
     @ParameterizedTest
     @MethodSource("randomNumbers")
     void isEvenParameterizedTest(int number) {
-
-        boolean expected = number % 2 == 0;
-
-        if (expected == HomeWork.isEven(number)) {
-            System.out.println("isEven -> TEST PASSED");
-        } else {
-            System.out.println("isEven -> TEST FAILED");
-        }
+        assertExpected(number % 2 == 0, HomeWork.isEven(number), "isEven", number);
     }
 
     @ParameterizedTest
     @MethodSource("randomNumbers")
     void checkAccessParameterizedTest(int age) {
-
-        String expected = age > 18 ? "Allowed" : "Denied";
-
-        if (expected.equals(HomeWork.checkAccess(age))) {
-            System.out.println("checkAccess -> TEST PASSED");
-        } else {
-            System.out.println("checkAccess -> TEST FAILED");
-        }
-
-        boolean expectedPositive = age > 0;
-
-        if (expectedPositive == HomeWork.isPositive(age)) {
-            System.out.println("isPositive -> TEST PASSED");
-        } else {
-            System.out.println("isPositive -> TEST FAILED");
-        }
+        assertExpected(age > 18 ? "Allowed" : "Denied", HomeWork.checkAccess(age), "checkAccess", age);
+        assertExpected(age > 0, HomeWork.isPositive(age), "isPositive", age);
     }
 
     @ParameterizedTest
     @MethodSource("randomNumbers")
     void gradeAndSumParameterizedTest(int value) {
-
-        String expectedGrade;
-
-        if (value <= 20)
-            expectedGrade = "E";
-        else if (value <= 40)
-            expectedGrade = "D";
-        else if (value <= 60)
-            expectedGrade = "C";
-        else if (value <= 80)
-            expectedGrade = "B";
-        else
-            expectedGrade = "A";
-
-        if (expectedGrade.equals(HomeWork.getGrade(value))) {
-            System.out.println("getGrade -> TEST PASSED");
-        } else {
-            System.out.println("getGrade -> TEST FAILED");
-        }
-
-        int expectedSum = value * (value + 1) / 2;
-
-        if (expectedSum == HomeWork.sumToN(value)) {
-            System.out.println("sumToN -> TEST PASSED");
-        } else {
-            System.out.println("sumToN -> TEST FAILED");
-        }
+        assertExpected(expectedGrade(value), HomeWork.getGrade(value), "getGrade", value);
+        assertExpected(value * (value + 1) / 2, HomeWork.sumToN(value), "sumToN", value);
     }
 
     @ParameterizedTest
     @MethodSource("randomNumbers")
     void collectionsParameterizedTest(int value) {
-
         String[] messages = {"Info", "Bug", "Warning"};
+        assertTrue(HomeWork.hasBug(messages),
+                "hasBug: expected=true, actual=false for messages " + Arrays.toString(messages));
 
-        if (HomeWork.hasBug(messages)) {
-            System.out.println("hasBug -> TEST PASSED");
-        } else {
-            System.out.println("hasBug -> TEST FAILED");
-        }
+        int[] array = {value, RANDOM.nextInt(101), RANDOM.nextInt(101), RANDOM.nextInt(101), RANDOM.nextInt(101)};
+        int expectedMax = Arrays.stream(array).max().orElseThrow();
+        assertExpected(expectedMax, HomeWork.findMax(array), "findMax", Arrays.toString(array));
 
-        int[] array = {
-                value,
-                RANDOM.nextInt(101),
-                RANDOM.nextInt(101),
-                RANDOM.nextInt(101),
-                RANDOM.nextInt(101)
-        };
+        String[] source = {"One", "Two", "Three"};
+        assertArrayExpected(new String[]{"Three", "Two", "One"}, HomeWork.reverse(source), "reverse", Arrays.toString(source));
 
-        int expectedMax = array[0];
+        List<Integer> numbers = List.of(RANDOM.nextInt(100), RANDOM.nextInt(100), RANDOM.nextInt(100),
+                RANDOM.nextInt(100), RANDOM.nextInt(100));
+        double expectedAverage = numbers.stream().mapToInt(Integer::intValue).average().orElseThrow();
+        assertExpected(expectedAverage, HomeWork.calcAverage(numbers), 0.0, "calcAverage", numbers);
 
-        for (int i = 1; i < array.length; i++) {
-            if (array[i] > expectedMax) {
-                expectedMax = array[i];
-            }
-        }
-
-        if (expectedMax == HomeWork.findMax(array)) {
-            System.out.println("findMax -> TEST PASSED");
-        } else {
-            System.out.println("findMax -> TEST FAILED");
-        }
-
-        String[] reversed =
-                HomeWork.reverse(new String[]{"One", "Two", "Three"});
-
-        if (reversed[0].equals("Three")
-                && reversed[1].equals("Two")
-                && reversed[2].equals("One")) {
-
-            System.out.println("reverse -> TEST PASSED");
-
-        } else {
-
-            System.out.println("reverse -> TEST FAILED");
-        }
-
-        List<Integer> numbers = Arrays.asList(
-                RANDOM.nextInt(100),
-                RANDOM.nextInt(100),
-                RANDOM.nextInt(100),
-                RANDOM.nextInt(100),
-                RANDOM.nextInt(100)
-        );
-
-        double expectedAverage = 0;
-
-        for (Integer number : numbers) {
-            expectedAverage += number;
-        }
-
-        expectedAverage /= numbers.size();
-
-        if (expectedAverage == HomeWork.calcAverage(numbers)) {
-            System.out.println("calcAverage -> TEST PASSED");
-        } else {
-            System.out.println("calcAverage -> TEST FAILED");
-        }
-
-        List<String> names =
-                Arrays.asList("Ann", "Bob", "Ann", "Tom");
-
-        List<String> expected =
-                Arrays.asList("Bob", "Tom");
-
-        if (expected.equals(HomeWork.removeSpecificName(names, "Ann"))) {
-            System.out.println("removeSpecificName -> TEST PASSED");
-        } else {
-            System.out.println("removeSpecificName -> TEST FAILED");
-        }
+        List<String> names = List.of("Ann", "Bob", "Ann", "Tom");
+        assertExpected(List.of("Bob", "Tom"), HomeWork.removeSpecificName(names, "Ann"),
+                "removeSpecificName", "names=" + names + ", name=Ann");
 
         int start = RANDOM.nextInt(10) + 1;
-
-        StringBuilder expectedBlastOff = new StringBuilder();
-
-        for (int i = start; i >= 1; i--) {
-            expectedBlastOff.append(i).append(" ");
-        }
-
-        expectedBlastOff.append("Поехали!");
-
-        if (expectedBlastOff.toString().equals(HomeWork.blastOff(start))) {
-            System.out.println("blastOff -> TEST PASSED");
-        } else {
-            System.out.println("blastOff -> TEST FAILED");
-        }
-
+        assertExpected(expectedBlastOff(start), HomeWork.blastOff(start), "blastOff", start);
         int end = start + 10;
+        assertExpected(expectedEvenRange(start, end), HomeWork.getEvenInRange(start, end),
+                "getEvenInRange", "start=" + start + ", end=" + end);
+    }
 
-        StringBuilder expectedRange = new StringBuilder();
+    private void runBasicMethodsAssertions() {
+        int number = RANDOM.nextInt(101);
+        int age = RANDOM.nextInt(101);
+        assertExpected(number % 2 == 0, HomeWork.isEven(number), "isEven", number);
+        assertExpected(number > 0, HomeWork.isPositive(number), "isPositive", number);
+        assertExpected(age > 18 ? "Allowed" : "Denied", HomeWork.checkAccess(age), "checkAccess", age);
+    }
 
+    private void runGradeAndBlastOffAssertions() {
+        int score = RANDOM.nextInt(101);
+        assertExpected(expectedGrade(score), HomeWork.getGrade(score), "getGrade", score);
+        int start = RANDOM.nextInt(10) + 1;
+        assertExpected(expectedBlastOff(start), HomeWork.blastOff(start), "blastOff", start);
+    }
+
+    private void runNumbersAssertions() {
+        int number = RANDOM.nextInt(100) + 1;
+        assertExpected(number * (number + 1) / 2, HomeWork.sumToN(number), "sumToN", number);
+        int end = number + 10;
+        assertExpected(expectedEvenRange(number, end), HomeWork.getEvenInRange(number, end),
+                "getEvenInRange", "start=" + number + ", end=" + end);
+    }
+
+    private void runCollectionsAssertions() {
+        assertTrue(HomeWork.hasBug(new String[]{"Info", "Bug", "Warning"}),
+                "hasBug: expected=true, actual=false for messages [Info, Bug, Warning]");
+        assertExpected(10, HomeWork.findMax(new int[]{5, 8, 2, 10, 4}), "findMax", "[5, 8, 2, 10, 4]");
+        assertArrayExpected(new String[]{"Three", "Two", "One"},
+                HomeWork.reverse(new String[]{"One", "Two", "Three"}), "reverse", "[One, Two, Three]");
+        assertExpected(4.0, HomeWork.calcAverage(List.of(2, 4, 6)), 0.0, "calcAverage", "[2, 4, 6]");
+        assertExpected(List.of("Bob", "Tom"), HomeWork.removeSpecificName(List.of("Ann", "Bob", "Ann", "Tom"), "Ann"),
+                "removeSpecificName", "names=[Ann, Bob, Ann, Tom], name=Ann");
+    }
+
+    private static String expectedGrade(int score) {
+        if (score <= 20) return "E";
+        if (score <= 40) return "D";
+        if (score <= 60) return "C";
+        if (score <= 80) return "B";
+        return "A";
+    }
+
+    private static String expectedBlastOff(int start) {
+        StringBuilder expected = new StringBuilder();
+        for (int i = start; i >= 1; i--) {
+            expected.append(i).append(" ");
+        }
+        return expected.append("\u0420\u045f\u0420\u0455\u0420\u00b5\u0421\u2026\u0420\u00b0\u0420\u00bb\u0420\u0451!").toString();
+    }
+
+    private static String expectedEvenRange(int start, int end) {
+        StringBuilder expected = new StringBuilder();
         for (int i = start; i <= end; i++) {
-
             if (i % 2 == 0) {
-
-                if (expectedRange.length() > 0) {
-                    expectedRange.append(" ");
-                }
-
-                expectedRange.append(i);
+                if (expected.length() > 0) expected.append(" ");
+                expected.append(i);
             }
         }
+        return expected.toString();
+    }
 
-        if (expectedRange.toString().equals(HomeWork.getEvenInRange(start, end))) {
-            System.out.println("getEvenInRange -> TEST PASSED");
-        } else {
-            System.out.println("getEvenInRange -> TEST FAILED");
-        }
+    private static <T> void assertExpected(T expected, T actual, String method, Object input) {
+        assertEquals(expected, actual,
+                () -> method + " failed for input " + input + ": expected=" + expected + ", actual=" + actual);
+    }
+
+    private static void assertExpected(double expected, double actual, double delta, String method, Object input) {
+        assertEquals(expected, actual, delta,
+                () -> method + " failed for input " + input + ": expected=" + expected + ", actual=" + actual);
+    }
+
+    private static void assertArrayExpected(String[] expected, String[] actual, String method, Object input) {
+        assertArrayEquals(expected, actual,
+                () -> method + " failed for input " + input + ": expected=" + Arrays.toString(expected)
+                        + ", actual=" + Arrays.toString(actual));
     }
 }

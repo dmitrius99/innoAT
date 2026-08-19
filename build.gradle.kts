@@ -17,7 +17,9 @@ dependencies {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        includeTags("homework")
+    }
     testLogging {
         events("passed", "failed", "skipped")
         showStandardStreams = true
