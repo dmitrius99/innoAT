@@ -1,14 +1,19 @@
 import org.example.HomeWork;
 import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.IntStream;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@Tag("homework")
 public class HomeWorkTest {
 
     private static final Random RANDOM = new Random();
@@ -17,48 +22,37 @@ public class HomeWorkTest {
         return RANDOM.ints(10, 1, 101);
     }
 
-    // @Test
-
-    @Test
+    @RepeatedTest(10)
     void isEvenTest() {
         int number = RANDOM.nextInt(101);
         boolean expected = number % 2 == 0;
         boolean actual = HomeWork.isEven(number);
 
-        if (expected == actual) {
-            System.out.println("isEven: TEST PASSED");
-        } else {
-            System.out.println("isEven: TEST FAILED");
-        }
+        assertEquals(expected, actual,
+                "isEven: expected = " + expected + ", actual = " + actual);
     }
 
-    @Test
+    @RepeatedTest(10)
     void isPositiveTest() {
         int number = RANDOM.nextInt(201) - 100;
         boolean expected = number > 0;
         boolean actual = HomeWork.isPositive(number);
 
-        if (expected == actual) {
-            System.out.println("isPositive: TEST PASSED");
-        } else {
-            System.out.println("isPositive: TEST FAILED");
-        }
+        assertEquals(expected, actual,
+                "isPositive: expected = " + expected + ", actual = " + actual);
     }
 
-    @Test
+    @RepeatedTest(10)
     void checkAccessTest() {
         int age = RANDOM.nextInt(101);
         String expected = age > 18 ? "Allowed" : "Denied";
         String actual = HomeWork.checkAccess(age);
 
-        if (expected.equals(actual)) {
-            System.out.println("checkAccess: TEST PASSED");
-        } else {
-            System.out.println("checkAccess: TEST FAILED");
-        }
+        assertEquals(expected, actual,
+                "checkAccess: expected = " + expected + ", actual = " + actual);
     }
 
-    @Test
+    @RepeatedTest(10)
     void getGradeTest() {
         int score = RANDOM.nextInt(101);
         String expected;
@@ -77,11 +71,8 @@ public class HomeWorkTest {
 
         String actual = HomeWork.getGrade(score);
 
-        if (expected.equals(actual)) {
-            System.out.println("getGrade: TEST PASSED");
-        } else {
-            System.out.println("getGrade: TEST FAILED");
-        }
+        assertEquals(expected, actual,
+                "getGrade: expected = " + expected + ", actual = " + actual);
     }
 
     // @RepeatedTest
@@ -98,11 +89,8 @@ public class HomeWorkTest {
 
         String actual = HomeWork.blastOff(start);
 
-        if (expected.toString().equals(actual)) {
-            System.out.println("blastOff: TEST PASSED");
-        } else {
-            System.out.println("blastOff: TEST FAILED");
-        }
+        assertEquals(expected.toString(), actual,
+                "blastOff: expected = " + expected + ", actual = " + actual);
     }
 
     @RepeatedTest(10)
@@ -111,11 +99,8 @@ public class HomeWorkTest {
         int expected = number * (number + 1) / 2;
         int actual = HomeWork.sumToN(number);
 
-        if (expected == actual) {
-            System.out.println("sumToN: TEST PASSED");
-        } else {
-            System.out.println("sumToN: TEST FAILED");
-        }
+        assertEquals(expected, actual,
+                "sumToN: expected = " + expected + ", actual = " + actual);
     }
 
     @RepeatedTest(10)
@@ -133,11 +118,8 @@ public class HomeWorkTest {
 
         boolean actual = HomeWork.hasBug(messages);
 
-        if (expected == actual) {
-            System.out.println("hasBug: TEST PASSED");
-        } else {
-            System.out.println("hasBug: TEST FAILED");
-        }
+        assertEquals(expected, actual,
+                "hasBug: expected = " + expected + ", actual = " + actual);
     }
 
     @RepeatedTest(10)
@@ -157,11 +139,8 @@ public class HomeWorkTest {
 
         String actual = HomeWork.getEvenInRange(start, end);
 
-        if (expected.toString().equals(actual)) {
-            System.out.println("getEvenInRange: TEST PASSED");
-        } else {
-            System.out.println("getEvenInRange: TEST FAILED");
-        }
+        assertEquals(expected.toString(), actual,
+                "getEvenInRange: expected = " + expected + ", actual = " + actual);
     }
 
     // @ParameterizedTest
@@ -186,11 +165,8 @@ public class HomeWorkTest {
 
         int actual = HomeWork.findMax(numbers);
 
-        if (expected == actual) {
-            System.out.println("findMax: TEST PASSED");
-        } else {
-            System.out.println("findMax: TEST FAILED");
-        }
+        assertEquals(expected, actual,
+                "findMax: expected = " + expected + ", actual = " + actual);
     }
 
     @ParameterizedTest
@@ -200,13 +176,9 @@ public class HomeWorkTest {
         String[] expected = {words[2], words[1], words[0]};
         String[] actual = HomeWork.reverse(words);
 
-        if (expected[0].equals(actual[0])
-                && expected[1].equals(actual[1])
-                && expected[2].equals(actual[2])) {
-            System.out.println("reverse: TEST PASSED");
-        } else {
-            System.out.println("reverse: TEST FAILED");
-        }
+        assertArrayEquals(expected, actual,
+                "reverse: expected = " + Arrays.toString(expected)
+                        + ", actual = " + Arrays.toString(actual));
     }
 
     @ParameterizedTest
@@ -226,11 +198,8 @@ public class HomeWorkTest {
         double expected = (double) sum / numbers.size();
         double actual = HomeWork.calcAverage(numbers);
 
-        if (expected == actual) {
-            System.out.println("calcAverage: TEST PASSED");
-        } else {
-            System.out.println("calcAverage: TEST FAILED");
-        }
+        assertEquals(expected, actual,
+                "calcAverage: expected = " + expected + ", actual = " + actual);
     }
 
     @ParameterizedTest
@@ -254,10 +223,7 @@ public class HomeWorkTest {
 
         List<String> actual = HomeWork.removeSpecificName(names, nameToRemove);
 
-        if (expected.equals(actual)) {
-            System.out.println("removeSpecificName: TEST PASSED");
-        } else {
-            System.out.println("removeSpecificName: TEST FAILED");
-        }
+        assertEquals(expected, actual,
+                "removeSpecificName: expected = " + expected + ", actual = " + actual);
     }
 }

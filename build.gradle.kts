@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     id("java")
 }
@@ -17,22 +19,33 @@ dependencies {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        includeTags("homework")
+    }
     testLogging {
         events("passed", "failed", "skipped")
         showStandardStreams = true
     }
 }
 
-//Задача запускает все тесты в проекте.
 tasks.register("runAllTests") {
     dependsOn(tasks.test)
     finalizedBy("testRunIsOver")
 }
 
-//После прогона вывод записи
 tasks.register("testRunIsOver") {
     doLast {
         println("Test run is over")
     }
+}
+
+tasks.register<Test>("runErrorTests") {
+    description = "Запускает только тесты из AssertionsTest"
+    useJUnitPlatform()
+
+    filter {
+        includeTestsMatching("AssertionsTest")
+    }
+
+    finalizedBy("testRunIsOver")
 }
