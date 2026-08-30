@@ -16,6 +16,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     // Source: https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-core
     implementation("com.fasterxml.jackson.core:jackson-core:2.22.1")
+    implementation("io.rest-assured:rest-assured:5.5.6")
+    testImplementation("org.assertj:assertj-core:3.27.7")
 }
 
 tasks.test {
@@ -49,3 +51,27 @@ tasks.register<Test>("runErrorTests") {
 
     finalizedBy("testRunIsOver")
 }
+
+tasks.register<Test>("API") {
+    description = "Запускает API-тесты"
+    useJUnitPlatform {
+        includeTags("ApiTests")
+    }
+    testLogging {
+        events("passed", "failed", "skipped")
+        showStandardStreams = true
+    }
+}
+
+tasks.register<Test>("testApiTask1") {
+    description = "Запускает API-тесты"
+    useJUnitPlatform {
+        includeTags("ApiTestsTask1")
+    }
+    testLogging {
+        events("passed", "failed", "skipped")
+        showStandardStreams = true
+    }
+}
+
+
