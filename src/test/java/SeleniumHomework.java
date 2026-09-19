@@ -98,7 +98,7 @@ public class SeleniumHomework {
     }
 
     private String createProductInAdmin() {
-        String productName = "Cup #" + System.currentTimeMillis();
+        String productName = "Cup " + System.currentTimeMillis();
 
         driver.get(BASE_URL + "/admin");
         loginToAdmin();

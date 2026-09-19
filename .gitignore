@@ -1,5 +1,6 @@
 .gradle/
 .gradle-local/
+.gradle-user/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
@@ -46,3 +47,5 @@ Thumbs.db
 ### Logs and temporary files ###
 *.log
 *.tmp
+
+.gradle-user/
