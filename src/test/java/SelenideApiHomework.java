@@ -25,9 +25,7 @@ import static io.restassured.RestAssured.given;
 @Tag("homework")
 public class SelenideApiHomework {
 
-    private static final String BASE_URL = "http://localhost:8080";
-    private static final String ADMIN_LOGIN = "admin";
-    private static final String ADMIN_PASSWORD = "secret123";
+    private static final TestConfiguration CONFIG = TestConfiguration.getInstance();
 
     private final List<Integer> createdProductIds = new ArrayList<>();
     private Map<String, String> adminCookies;
@@ -37,13 +35,13 @@ public class SelenideApiHomework {
         Configuration.browser = "chrome";
         Configuration.headless = true;
         Configuration.browserSize = "1920x1080";
-        Configuration.timeout = 10_000;
-        RestAssured.baseURI = BASE_URL;
+        Configuration.timeout = CONFIG.elementTimeoutMs();
+        RestAssured.baseURI = CONFIG.apiUrl();
         adminCookies = given()
                 .redirects().follow(false)
                 .contentType(ContentType.URLENC)
-                .formParam("username", ADMIN_LOGIN)
-                .formParam("password", ADMIN_PASSWORD)
+                .formParam("username", CONFIG.adminLogin())
+                .formParam("password", CONFIG.adminPassword())
                 .post("/login")
                 .then().statusCode(302)
                 .extract().cookies();
@@ -62,7 +60,7 @@ public class SelenideApiHomework {
     void canPayForThreeUnitsOfProduct() {
         TestProduct product = createProductViaApi(90);
 
-        open(BASE_URL);
+        open(CONFIG.standUrl());
         addProductToCart(product, 3);
         $("#open-cart-btn").click();
         $("#makeOrder").click();
@@ -76,7 +74,7 @@ public class SelenideApiHomework {
         TestProduct firstProduct = createProductViaApi(70);
         TestProduct secondProduct = createProductViaApi(120);
 
-        open(BASE_URL);
+        open(CONFIG.standUrl());
         addProductToCart(firstProduct, 1);
         addProductToCart(secondProduct, 1);
         $("#open-cart-btn").click();
@@ -88,7 +86,7 @@ public class SelenideApiHomework {
     void notificationIsShownAfterProductIsAddedInAdmin() {
         String productName = "Admin cup " + UUID.randomUUID();
 
-        open(BASE_URL + "/admin");
+        open(CONFIG.standUrl() + "/admin");
         loginToAdmin();
         $("#n-name").setValue(productName);
         $("#n-price").setValue("100");
@@ -104,13 +102,13 @@ public class SelenideApiHomework {
         TestProduct product = createProductViaApi(100);
         String changedName = "Edited cup " + UUID.randomUUID();
 
-        open(BASE_URL + "/admin");
+        open(CONFIG.standUrl() + "/admin");
         loginToAdmin();
         $("#nm-" + product.id()).setValue(changedName);
         $("button[data-action='update'][data-id='" + product.id() + "']").click();
         $(".toast").shouldBe(visible).shouldHave(text("обновлен"));
 
-        open(BASE_URL);
+        open(CONFIG.standUrl());
         $(".product-card[data-name='" + changedName + "']").shouldBe(visible);
     }
 
@@ -154,8 +152,8 @@ public class SelenideApiHomework {
     }
 
     private void loginToAdmin() {
-        $("#username").setValue(ADMIN_LOGIN);
-        $("#password").setValue(ADMIN_PASSWORD);
+        $("#username").setValue(CONFIG.adminLogin());
+        $("#password").setValue(CONFIG.adminPassword());
         $("button[type='submit']").click();
         $("#n-name").shouldBe(visible);
     }

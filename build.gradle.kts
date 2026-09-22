@@ -1,5 +1,6 @@
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.compile.JavaCompile
+import java.util.Properties
 
 plugins {
     id("java")
@@ -34,6 +35,21 @@ tasks.test {
     testLogging {
         events("passed", "failed", "skipped")
         showStandardStreams = true
+    }
+}
+
+tasks.withType<Test>().configureEach {
+    doFirst {
+        val config = Properties()
+        file("src/test/resources/test.properties").inputStream().use { input -> config.load(input) }
+
+        println("Конфигурация запуска тестов:")
+        println("  URL стенда: ${config.getProperty("stand.url")}")
+        println("  URL API: ${config.getProperty("api.url")}")
+        println("  Тайм-аут поиска элементов: ${config.getProperty("element.timeout.ms")} мс")
+        println("  Режим логирования: ${config.getProperty("logging.mode")}")
+        println("  Имя стартового товара: ${config.getProperty("starter.product.name")}")
+        println("  Цена стартового товара: ${config.getProperty("starter.product.price")}")
     }
 }
 

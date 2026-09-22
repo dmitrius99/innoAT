@@ -11,23 +11,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Tag("ApiTests")
 public class GoodsApiTest {
 
-    private static final String BASE_URI = "http://localhost:8080";
+    private static final TestConfiguration CONFIG = TestConfiguration.getInstance();
 
     @Test
     void addGoodReturns200AndCreatedId() {
-        String name = "good-" + UUID.randomUUID();
+        String name = CONFIG.starterProductName() + "-" + UUID.randomUUID();
 
         Response response = given()
-                .baseUri(BASE_URI)
-                .auth().basic("admin", "secret123")
+                .baseUri(CONFIG.apiUrl())
+                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .body("""
                         {
                           "name": "%s",
-                          "price": 100.0
+                          "price": %s
                         }
-                        """.formatted(name))
+                        """.formatted(name, CONFIG.starterProductPrice()))
         .when()
                 .post("/goods/add");
 
@@ -45,8 +45,8 @@ public class GoodsApiTest {
     @Test
     void addGoodWithoutRequiredNameReturns400() {
         Response response = given()
-                .baseUri(BASE_URI)
-                .auth().basic("admin", "secret123")
+                .baseUri(CONFIG.apiUrl())
+                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .body("""
@@ -69,8 +69,8 @@ public class GoodsApiTest {
     //тесты получения изменения удаления товара не зависит от прежних запусков и содержимого базы
     private int createGood(String name, double price) {
         Response response = given()
-                .baseUri(BASE_URI)
-                .auth().basic("admin", "secret123")
+                .baseUri(CONFIG.apiUrl())
+                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .body("""
@@ -101,8 +101,8 @@ public class GoodsApiTest {
         int createdId = createGood(name, 100.0);
 
         Response response = given()
-                .baseUri(BASE_URI)
-                .auth().basic("admin", "secret123")
+                .baseUri(CONFIG.apiUrl())
+                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .accept(ContentType.JSON)
                 .pathParam("id", createdId)
         .when()
@@ -122,8 +122,8 @@ public class GoodsApiTest {
     @Test
     void getGoodByMissingIdReturns404() {
         Response response = given()
-                .baseUri(BASE_URI)
-                .auth().basic("admin", "secret123")
+                .baseUri(CONFIG.apiUrl())
+                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .accept(ContentType.JSON)
                 .pathParam("id", -1)
         .when()
@@ -143,8 +143,8 @@ public class GoodsApiTest {
         String updatedName = "updated-good-" + UUID.randomUUID();
 
         Response response = given()
-                .baseUri(BASE_URI)
-                .auth().basic("admin", "secret123")
+                .baseUri(CONFIG.apiUrl())
+                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .pathParam("id", createdId)
@@ -176,8 +176,8 @@ public class GoodsApiTest {
         int createdId = createGood("good-" + UUID.randomUUID(), 100.0);
 
         Response response = given()
-                .baseUri(BASE_URI)
-                .auth().basic("admin", "secret123")
+                .baseUri(CONFIG.apiUrl())
+                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .pathParam("id", createdId)
@@ -197,8 +197,8 @@ public class GoodsApiTest {
     @Test
     void patchGoodByMissingIdReturns404() {
         Response response = given()
-                .baseUri(BASE_URI)
-                .auth().basic("admin", "secret123")
+                .baseUri(CONFIG.apiUrl())
+                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
                 .pathParam("id", -1)
@@ -221,8 +221,8 @@ public class GoodsApiTest {
         int createdId = createGood("good-" + UUID.randomUUID(), 100.0);
 
         Response deleteResponse = given()
-                .baseUri(BASE_URI)
-                .auth().basic("admin", "secret123")
+                .baseUri(CONFIG.apiUrl())
+                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .accept(ContentType.JSON)
                 .pathParam("id", createdId)
         .when()
@@ -237,8 +237,8 @@ public class GoodsApiTest {
     @Test
     void deleteGoodByMissingIdReturns404() {
         Response response = given()
-                .baseUri(BASE_URI)
-                .auth().basic("admin", "secret123")
+                .baseUri(CONFIG.apiUrl())
+                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .accept(ContentType.JSON)
                 .pathParam("id", -1)
         .when()
@@ -254,7 +254,7 @@ public class GoodsApiTest {
         int createdId = createGood("good-" + UUID.randomUUID(), 100.0);
 
         Response response = given()
-                .baseUri(BASE_URI)
+                .baseUri(CONFIG.apiUrl())
                 .accept(ContentType.JSON)
                 .queryParam("page", 0)
                 .queryParam("size", 100)

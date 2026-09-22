@@ -16,10 +16,12 @@ import static org.hamcrest.Matchers.*;
 @Tag("ApiTestsTask1")
 public class FirstApiTest {
 
+    private static final TestConfiguration CONFIG = TestConfiguration.getInstance();
+
     @Test
         void checkStatusCodeAndBody () {
         given()
-                .baseUri("http://localhost:8080/")
+                .baseUri(CONFIG.apiUrl())
                 .basePath("goods/list")
                 .queryParam("page", "0")
                 .queryParam("size", "10")
@@ -34,7 +36,7 @@ public class FirstApiTest {
     }
 
     private RequestSpecification basicParams = new RequestSpecBuilder()
-            .setBaseUri("http://localhost:8080/")
+            .setBaseUri(CONFIG.apiUrl())
             .addQueryParam("page", "0")
             .addQueryParam("size", "10")
             .addHeader("Accept", "application/json")
@@ -56,17 +58,17 @@ public class FirstApiTest {
     @Test
         void createAndCheckGood () {
         JsonPath responceGoodAdd = given()
-            .baseUri("http://localhost:8080/")
+            .baseUri(CONFIG.apiUrl())
             .basePath("goods/add")
             .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
-            .auth().basic("admin", "secret123")
+            .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .body("""
                         {
-                          "name": "Gyros",
-                          "price": 100
+                          "name": "%s",
+                          "price": %s
                         }
-                        """)
+                        """.formatted(CONFIG.starterProductName(), CONFIG.starterProductPrice()))
                 .when()
                 .post()
                 .then()
@@ -79,7 +81,7 @@ public class FirstApiTest {
         System.out.println("Id добавленного товара: " + goodId);
 
         given()
-                .baseUri("http://localhost:8080/")
+                .baseUri(CONFIG.apiUrl())
                 .basePath("goods/list")
                 .header("Accept", "application/json")
                 .queryParam("page", "0")
@@ -96,11 +98,11 @@ public class FirstApiTest {
     @Test
     void createAndCheckGoodWithAssertJ () {
         JsonPath responceGoodAdd = given()
-                .baseUri("http://localhost:8080/")
+                .baseUri(CONFIG.apiUrl())
                 .basePath("goods/add")
                 .accept(ContentType.JSON)
                 .contentType(ContentType.JSON)
-                .auth().basic("admin", "secret123")
+                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
                 .body("""
                         {
                           "name": "fsaaros",
@@ -119,7 +121,7 @@ public class FirstApiTest {
         System.out.println("Id созданного товара: " + goodId);
 
         JsonPath responceGoodList = given()
-                .baseUri("http://localhost:8080/")
+                .baseUri(CONFIG.apiUrl())
                 .basePath("goods/list")
                 .accept(ContentType.JSON)
                 .queryParam("page", "0")

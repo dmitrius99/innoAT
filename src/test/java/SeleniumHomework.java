@@ -17,9 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag("homework")
 public class SeleniumHomework {
 
-    private static final String BASE_URL = "http://localhost:8080";
-    private static final String ADMIN_LOGIN = "admin";
-    private static final String ADMIN_PASSWORD = "secret123";
+    private static final TestConfiguration CONFIG = TestConfiguration.getInstance();
 
     private WebDriver driver;
     private WebDriverWait wait;
@@ -31,7 +29,7 @@ public class SeleniumHomework {
         options.addArguments("--window-size=1920,1080");
 
         driver = new ChromeDriver(options);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait = new WebDriverWait(driver, Duration.ofMillis(CONFIG.elementTimeoutMs()));
     }
 
     @AfterEach
@@ -45,7 +43,7 @@ public class SeleniumHomework {
     void productAddedInAdminIsShownOnStorefront() {
         String productName = createProductInAdmin();
 
-        driver.get(BASE_URL);
+        driver.get(CONFIG.standUrl());
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.cssSelector(".product-card[data-name='" + productName + "']")
@@ -58,7 +56,7 @@ public class SeleniumHomework {
     @Test
     void productAddedToCartIsShownInCart() {
         String productName = createProductInAdmin();
-        driver.get(BASE_URL);
+        driver.get(CONFIG.standUrl());
         addProductToCart(productName);
 
         driver.findElement(By.id("open-cart-btn")).click();
@@ -70,7 +68,7 @@ public class SeleniumHomework {
 
     @Test
     void cannotLoginToAdminWithInvalidCredentials() {
-        driver.get(BASE_URL + "/admin");
+        driver.get(CONFIG.standUrl() + "/admin");
 
         driver.findElement(By.id("username")).sendKeys("wrong-login");
         driver.findElement(By.id("password")).sendKeys("wrong-password");
@@ -85,7 +83,7 @@ public class SeleniumHomework {
     @Test
     void productsRemainInCartAfterPageRefresh() {
         String productName = createProductInAdmin();
-        driver.get(BASE_URL);
+        driver.get(CONFIG.standUrl());
         addProductToCart(productName);
 
         driver.navigate().refresh();
@@ -98,13 +96,13 @@ public class SeleniumHomework {
     }
 
     private String createProductInAdmin() {
-        String productName = "Cup " + System.currentTimeMillis();
+        String productName = CONFIG.starterProductName() + " " + System.currentTimeMillis();
 
-        driver.get(BASE_URL + "/admin");
+        driver.get(CONFIG.standUrl() + "/admin");
         loginToAdmin();
 
         driver.findElement(By.id("n-name")).sendKeys(productName);
-        driver.findElement(By.id("n-price")).sendKeys("100");
+        driver.findElement(By.id("n-price")).sendKeys(CONFIG.starterProductPrice().toPlainString());
         driver.findElement(By.id("add-btn")).click();
 
         wait.until(ExpectedConditions.presenceOfElementLocated(
@@ -116,8 +114,8 @@ public class SeleniumHomework {
 
     private void loginToAdmin() {
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")))
-                .sendKeys(ADMIN_LOGIN);
-        driver.findElement(By.id("password")).sendKeys(ADMIN_PASSWORD);
+                .sendKeys(CONFIG.adminLogin());
+        driver.findElement(By.id("password")).sendKeys(CONFIG.adminPassword());
         driver.findElement(By.cssSelector("button[type='submit']")).click();
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("n-name")));

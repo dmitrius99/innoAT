@@ -19,9 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag("homework")
 public class DragAndDropHomework {
 
-    private static final String BASE_URL = "http://localhost:8080";
-    private static final String ADMIN_LOGIN = "admin";
-    private static final String ADMIN_PASSWORD = "secret123";
+    private static final TestConfiguration CONFIG = TestConfiguration.getInstance();
 
     private WebDriver driver;
     private WebDriverWait wait;
@@ -33,7 +31,7 @@ public class DragAndDropHomework {
         options.addArguments("--window-size=1920,1080");
 
         driver = new ChromeDriver(options);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        wait = new WebDriverWait(driver, Duration.ofMillis(CONFIG.elementTimeoutMs()));
     }
 
     @AfterEach
@@ -47,7 +45,7 @@ public class DragAndDropHomework {
     void productCanBeDraggedToCart() {
         String productName = createProductInAdmin();
 
-        driver.get(BASE_URL);
+        driver.get(CONFIG.standUrl());
         String productId = dragProductToCart(productName);
 
         driver.findElement(By.id("open-cart-btn")).click();
@@ -63,7 +61,7 @@ public class DragAndDropHomework {
     void productCanBeRemovedFromCart() {
         String productName = createProductInAdmin();
 
-        driver.get(BASE_URL);
+        driver.get(CONFIG.standUrl());
         String productId = dragProductToCart(productName);
         driver.findElement(By.id("open-cart-btn")).click();
 
@@ -78,16 +76,16 @@ public class DragAndDropHomework {
     }
 
     private String createProductInAdmin() {
-        String productName = "Cup " + UUID.randomUUID();
+        String productName = CONFIG.starterProductName() + " " + UUID.randomUUID();
 
-        driver.get(BASE_URL + "/admin");
-        driver.findElement(By.id("username")).sendKeys(ADMIN_LOGIN);
-        driver.findElement(By.id("password")).sendKeys(ADMIN_PASSWORD);
+        driver.get(CONFIG.standUrl() + "/admin");
+        driver.findElement(By.id("username")).sendKeys(CONFIG.adminLogin());
+        driver.findElement(By.id("password")).sendKeys(CONFIG.adminPassword());
         driver.findElement(By.cssSelector("button[type='submit']")).click();
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("n-name")));
         driver.findElement(By.id("n-name")).sendKeys(productName);
-        driver.findElement(By.id("n-price")).sendKeys("100");
+        driver.findElement(By.id("n-price")).sendKeys(CONFIG.starterProductPrice().toPlainString());
         driver.findElement(By.id("add-btn")).click();
 
         wait.until(ExpectedConditions.visibilityOfElementLocated(

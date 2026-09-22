@@ -19,16 +19,14 @@ import static com.codeborne.selenide.Selectors.withText;
 @Tag("homework")
 public class SelenideHomework {
 
-    private static final String BASE_URL = "http://localhost:8080";
-    private static final String ADMIN_LOGIN = "admin";
-    private static final String ADMIN_PASSWORD = "secret123";
+    private static final TestConfiguration CONFIG = TestConfiguration.getInstance();
 
     @BeforeEach
     void setUp() {
         Configuration.browser = "chrome";
         Configuration.headless = true;
         Configuration.browserSize = "1920x1080";
-        Configuration.timeout = 10_000;
+        Configuration.timeout = CONFIG.elementTimeoutMs();
     }
 
     @AfterEach
@@ -38,9 +36,9 @@ public class SelenideHomework {
 
     @Test
     void productAddedInAdminIsShownOnStorefront() {
-        String productName = createProductInAdmin(100);
+        String productName = createStarterProductInAdmin();
 
-        open(BASE_URL);
+        open(CONFIG.standUrl());
 
         $(".product-card[data-name='" + productName + "']").shouldBe(visible);
     }
@@ -49,7 +47,7 @@ public class SelenideHomework {
     void productAddedToCartIsShownInCart() {
         String productName = createProductInAdmin(100);
 
-        open(BASE_URL);
+        open(CONFIG.standUrl());
         addProductToCart(productName);
         $("#open-cart-btn").click();
 
@@ -58,7 +56,7 @@ public class SelenideHomework {
 
     @Test
     void cannotLoginToAdminWithInvalidCredentials() {
-        open(BASE_URL + "/admin");
+        open(CONFIG.standUrl() + "/admin");
 
         $("#username").setValue("wrong-login");
         $("#password").setValue("wrong-password");
@@ -72,7 +70,7 @@ public class SelenideHomework {
     void productsRemainInCartAfterPageRefresh() {
         String productName = createProductInAdmin(100);
 
-        open(BASE_URL);
+        open(CONFIG.standUrl());
         addProductToCart(productName);
         refresh();
         $("#open-cart-btn").click();
@@ -84,7 +82,7 @@ public class SelenideHomework {
     void alertIsShownWhenOrderCostsMoreThan300Rubles() {
         String productName = createProductInAdmin(301);
 
-        open(BASE_URL);
+        open(CONFIG.standUrl());
         addProductToCart(productName);
         $("#open-cart-btn").click();
         $("#makeOrder").click();
@@ -95,7 +93,7 @@ public class SelenideHomework {
     private String createProductInAdmin(int price) {
         String productName = "Cup " + UUID.randomUUID();
 
-        open(BASE_URL + "/admin");
+        open(CONFIG.standUrl() + "/admin");
         loginToAdmin();
         $("#n-name").setValue(productName);
         $("#n-price").setValue(String.valueOf(price));
@@ -105,9 +103,22 @@ public class SelenideHomework {
         return productName;
     }
 
+    private String createStarterProductInAdmin() {
+        String productName = CONFIG.starterProductName() + " " + UUID.randomUUID();
+
+        open(CONFIG.standUrl() + "/admin");
+        loginToAdmin();
+        $("#n-name").setValue(productName);
+        $("#n-price").setValue(CONFIG.starterProductPrice().toPlainString());
+        $("#add-btn").click();
+
+        $(".toast").shouldBe(visible);
+        return productName;
+    }
+
     private void loginToAdmin() {
-        $("#username").setValue(ADMIN_LOGIN);
-        $("#password").setValue(ADMIN_PASSWORD);
+        $("#username").setValue(CONFIG.adminLogin());
+        $("#password").setValue(CONFIG.adminPassword());
         $("button[type='submit']").click();
 
         $("#n-name").shouldBe(visible);
