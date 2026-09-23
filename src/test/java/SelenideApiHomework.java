@@ -1,5 +1,4 @@
 import com.codeborne.selenide.Configuration;
-import com.codeborne.selenide.SelenideElement;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -7,24 +6,25 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import pages.AdminLoginPage;
+import pages.AdminProductsPage;
+import pages.MainPage;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.codeborne.selenide.Condition.exactText;
-import static com.codeborne.selenide.Condition.text;
-import static com.codeborne.selenide.Condition.visible;
-import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.$$;
 import static com.codeborne.selenide.Selenide.closeWebDriver;
-import static com.codeborne.selenide.Selenide.open;
 import static io.restassured.RestAssured.given;
 
+/**
+ * Задания вебинара. В тестах нет прямых обращений к UI-элементам:
+ * действия выполняют PageObject, проверки выполняют PageAssert.
+ */
 @Tag("homework")
 public class SelenideApiHomework {
-
     private static final TestConfiguration CONFIG = TestConfiguration.getInstance();
 
     private final List<Integer> createdProductIds = new ArrayList<>();
@@ -58,113 +58,100 @@ public class SelenideApiHomework {
 
     @Test
     void canPayForThreeUnitsOfProduct() {
-        TestProduct product = createProductViaApi(90);
+        TestProduct product = createProductViaApi(BigDecimal.valueOf(90));
+        MainPage storefront = new MainPage().open(CONFIG.standUrl());
 
-        open(CONFIG.standUrl());
-        addProductToCart(product, 3);
-        $("#open-cart-btn").click();
-        $("#makeOrder").click();
+        storefront.check().hasVisibleBaseElements().hasProductNamed(product.name());
+        storefront.addProductToCart(product.id(), 3).openCart();
+        storefront.check().hasCartOpen()
+                .hasCartItemNamed(product.name())
+                .hasCartItemsCount(3)
+                .hasTotalPrice(BigDecimal.valueOf(270));
 
-        $$(".toast").last().shouldBe(visible)
-                .shouldHave(text("Заказ принят в обработку!"));
+        storefront.checkout();
+        storefront.check().hasNotification("Заказ принят в обработку!")
+                .hasSuccessfulOrderTitle();
     }
 
     @Test
     void cartTotalIsCalculatedForDifferentProducts() {
-        TestProduct firstProduct = createProductViaApi(70);
-        TestProduct secondProduct = createProductViaApi(120);
+        TestProduct firstProduct = createProductViaApi(BigDecimal.valueOf(70));
+        TestProduct secondProduct = createProductViaApi(BigDecimal.valueOf(120));
+        MainPage storefront = new MainPage().open(CONFIG.standUrl());
 
-        open(CONFIG.standUrl());
-        addProductToCart(firstProduct, 1);
-        addProductToCart(secondProduct, 1);
-        $("#open-cart-btn").click();
+        storefront.addProductToCart(firstProduct.id(), 1)
+                .addProductToCart(secondProduct.id(), 1)
+                .openCart();
 
-        $("#total-price").shouldBe(visible).shouldHave(exactText("190"));
+        storefront.check().hasCartOpen()
+                .hasCartItemNamed(firstProduct.name())
+                .hasCartItemNamed(secondProduct.name())
+                .hasCartItemsCount(2)
+                .hasTotalPrice(BigDecimal.valueOf(190));
     }
 
     @Test
     void notificationIsShownAfterProductIsAddedInAdmin() {
         String productName = "Admin cup " + UUID.randomUUID();
+        AdminLoginPage loginPage = new AdminLoginPage().open(CONFIG.standUrl());
 
-        open(CONFIG.standUrl() + "/admin");
-        loginToAdmin();
-        $("#n-name").setValue(productName);
-        $("#n-price").setValue("100");
-        $("#add-btn").click();
+        loginPage.check().hasVisibleLoginForm();
+        loginPage.typeLogin(CONFIG.adminLogin()).check().hasLogin(CONFIG.adminLogin());
+        loginPage.typePassword(CONFIG.adminPassword()).check().hasPassword(CONFIG.adminPassword());
+        AdminProductsPage adminProducts = loginPage.submit();
 
-        $(".toast").shouldBe(visible)
-                .shouldHave(text("Товар успешно добавлен!"));
+        adminProducts.check().hasVisibleAddProductForm();
+        adminProducts.typeNewProductName(productName).check().hasNewProductName(productName);
+        adminProducts.typeNewProductPrice(BigDecimal.valueOf(100)).check().hasNewProductPrice("100");
+        adminProducts.clickAddProduct().check().hasNotification("Товар успешно добавлен!");
         createdProductIds.add(findProductIdByName(productName));
     }
 
     @Test
     void editedProductIsShownWithNewNameOnStorefront() {
-        TestProduct product = createProductViaApi(100);
+        TestProduct product = createProductViaApi(BigDecimal.valueOf(100));
         String changedName = "Edited cup " + UUID.randomUUID();
+        AdminLoginPage loginPage = new AdminLoginPage().open(CONFIG.standUrl());
 
-        open(CONFIG.standUrl() + "/admin");
-        loginToAdmin();
-        $("#nm-" + product.id()).setValue(changedName);
-        $("button[data-action='update'][data-id='" + product.id() + "']").click();
-        $(".toast").shouldBe(visible).shouldHave(text("обновлен"));
+        AdminProductsPage adminProducts = loginPage.loginAs(CONFIG.adminLogin(), CONFIG.adminPassword());
+        adminProducts.check().hasVisibleAddProductForm();
+        adminProducts.editProductName(product.id(), changedName)
+                .check().hasNotification("обновлен");
 
-        open(CONFIG.standUrl());
-        $(".product-card[data-name='" + changedName + "']").shouldBe(visible);
+        MainPage storefront = new MainPage().open(CONFIG.standUrl());
+        storefront.check().hasProductNamed(changedName);
     }
 
-    private TestProduct createProductViaApi(int price) {
+    private TestProduct createProductViaApi(BigDecimal price) {
         String productName = "API cup " + UUID.randomUUID();
-
         Response response = given()
                 .redirects().follow(false)
                 .cookies(adminCookies)
                 .contentType(ContentType.JSON)
-                .body("{\"name\":\"" + productName + "\",\"price\":" + price + "}")
+                .body("{\"name\":\"" + productName + "\",\"price\":" + price.toPlainString() + "}")
                 .post("/goods/add");
 
         response.then().statusCode(200);
-
         int productId = response.jsonPath().getInt("data.id");
         createdProductIds.add(productId);
         return new TestProduct(productId, productName, price);
     }
 
     private int findProductIdByName(String productName) {
-        List<Map<String, Object>> goods = given()
-                .get("/goods/list?page=0&size=1000")
-                .jsonPath()
-                .getList("goods");
-
+        List<Map<String, Object>> goods = given().get("/goods/list?page=0&size=1000")
+                .jsonPath().getList("goods");
         Map<String, Object> product = goods.stream()
                 .filter(good -> productName.equals(good.get("name")))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Товар не найден: " + productName));
-
         return ((Number) product.get("id")).intValue();
     }
 
     private void deleteCreatedProducts() {
         for (Integer productId : createdProductIds) {
-            given()
-                    .cookies(adminCookies)
-                    .delete("/goods/{id}", productId);
+            given().cookies(adminCookies).delete("/goods/{id}", productId);
         }
     }
 
-    private void loginToAdmin() {
-        $("#username").setValue(CONFIG.adminLogin());
-        $("#password").setValue(CONFIG.adminPassword());
-        $("button[type='submit']").click();
-        $("#n-name").shouldBe(visible);
-    }
-
-    private void addProductToCart(TestProduct product, int quantity) {
-        SelenideElement productCard = $(".product-card[data-id='" + product.id() + "']")
-                .shouldBe(visible);
-        productCard.$(".qty-input").setValue(String.valueOf(quantity));
-        productCard.$("button[data-action='add-to-cart']").click();
-    }
-
-    private record TestProduct(int id, String name, int price) {
-    }
+    private record TestProduct(int id, String name, BigDecimal price) { }
 }
