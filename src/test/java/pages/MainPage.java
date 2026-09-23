@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
-import static com.codeborne.selenide.Selenide.open;
 
 /** PageObject витрины SmartShop. */
 public class MainPage {
@@ -25,7 +24,7 @@ public class MainPage {
     private final SelenideElement makeOrderButton = $("#makeOrder");
     private final ElementsCollection notifications = $$(".toast");
 
-    public MainPage open(String baseUrl) { open(baseUrl); return this; }
+    public MainPage open(String baseUrl) { com.codeborne.selenide.Selenide.open(baseUrl); return this; }
     public MainPage openAdministration() { administrationLink.click(); return this; }
     public MainPage openCart() { openCartButton.click(); return this; }
     public MainPage closeCart() { closeCartButton.click(); return this; }
