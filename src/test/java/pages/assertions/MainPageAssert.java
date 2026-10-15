@@ -2,6 +2,7 @@ package pages.assertions;
 
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.CollectionCondition;
+import io.qameta.allure.Step;
 import org.assertj.core.api.AbstractAssert;
 import pages.MainPage;
 
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 public class MainPageAssert extends AbstractAssert<MainPageAssert, MainPage> {
     public MainPageAssert(MainPage actual) { super(actual, MainPageAssert.class); }
 
+    @Step("Проверить базовые элементы витрины")
     public MainPageAssert hasVisibleBaseElements() {
         isNotNull();
         actual.mainTitle().shouldBe(Condition.visible);
@@ -23,6 +25,7 @@ public class MainPageAssert extends AbstractAssert<MainPageAssert, MainPage> {
         return this;
     }
 
+    @Step("Проверить, что корзина открыта")
     public MainPageAssert hasCartOpen() {
         isNotNull();
         actual.cartModal().shouldBe(Condition.visible);
@@ -33,30 +36,35 @@ public class MainPageAssert extends AbstractAssert<MainPageAssert, MainPage> {
         return this;
     }
 
+    @Step("Проверить видимость карточек товаров")
     public MainPageAssert hasVisibleProductCards() {
         isNotNull();
         actual.productCards().first().shouldBe(Condition.visible);
         return this;
     }
 
+    @Step("Проверить отображение товара «{productName}»")
     public MainPageAssert hasProductNamed(String productName) {
         isNotNull();
         actual.productCards().findBy(Condition.attribute("data-name", productName)).shouldBe(Condition.visible);
         return this;
     }
 
+    @Step("Проверить товар «{productName}» в корзине")
     public MainPageAssert hasCartItemNamed(String productName) {
         isNotNull();
         actual.cartItems().shouldHave(Condition.text(productName));
         return this;
     }
 
+    @Step("Проверить итоговую цену {expectedPrice}")
     public MainPageAssert hasTotalPrice(BigDecimal expectedPrice) {
         isNotNull();
         actual.totalPrice().shouldHave(Condition.exactText(expectedPrice.toPlainString()));
         return this;
     }
 
+    @Step("Проверить, что итоговая цена не больше {maximumPrice}")
     public MainPageAssert hasTotalPriceNotGreaterThan(BigDecimal maximumPrice) {
         isNotNull();
         BigDecimal actualPrice = actual.totalPriceValue();
@@ -66,12 +74,14 @@ public class MainPageAssert extends AbstractAssert<MainPageAssert, MainPage> {
         return this;
     }
 
+    @Step("Проверить количество товаров в корзине: {expectedCount}")
     public MainPageAssert hasCartItemsCount(int expectedCount) {
         isNotNull();
         actual.cartCount().shouldHave(Condition.exactText(String.valueOf(expectedCount)));
         return this;
     }
 
+    @Step("Проверить уведомление «{expectedText}»")
     public MainPageAssert hasNotification(String expectedText) {
         isNotNull();
         actual.notifications().shouldHave(CollectionCondition.sizeGreaterThan(0));
@@ -79,6 +89,7 @@ public class MainPageAssert extends AbstractAssert<MainPageAssert, MainPage> {
         return this;
     }
 
+    @Step("Проверить успешное оформление заказа")
     public MainPageAssert hasSuccessfulOrderTitle() {
         isNotNull();
         actual.mainTitle().shouldHave(Condition.exactText("Заказ успешно оформлен!"));

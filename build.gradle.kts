@@ -4,6 +4,7 @@ import java.util.Properties
 
 plugins {
     id("java")
+    id("io.qameta.allure") version "2.12.0"
 }
 
 group = "org.example"
@@ -22,6 +23,22 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-core:2.22.1")
     implementation("io.rest-assured:rest-assured:5.5.6")
     testImplementation("org.assertj:assertj-core:3.27.7")
+    testImplementation("io.qameta.allure:allure-junit5:2.29.1")
+    testImplementation("io.qameta.allure:allure-selenide:2.29.1")
+    testImplementation("io.qameta.allure:allure-rest-assured:2.29.1")
+}
+
+allure {
+    version.set("2.29.0")
+    adapter {
+        autoconfigure.set(true)
+        autoconfigureListeners.set(true)
+        frameworks {
+            junit5 {
+                adapterVersion.set("2.29.1")
+            }
+        }
+    }
 }
 
 tasks.withType<JavaCompile> {
@@ -64,6 +81,15 @@ tasks.register("testRunIsOver") {
     }
 }
 
+tasks.register<Zip>("archiveAllureReport") {
+    group = "verification"
+    description = "Собирает ZIP-архив Allure-отчёта после UI- и API-тестов"
+    dependsOn("allureReport")
+    from(layout.buildDirectory.dir("reports/allure-report/allureReport"))
+    archiveFileName.set("allure-report-ui-api.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("reports"))
+}
+
 tasks.register<Test>("runErrorTests") {
     description = "Запускает только тесты из AssertionsTest"
     useJUnitPlatform()
@@ -90,6 +116,17 @@ tasks.register<Test>("testApiTask1") {
     description = "Запускает API-тесты"
     useJUnitPlatform {
         includeTags("ApiTestsTask1")
+    }
+    testLogging {
+        events("passed", "failed", "skipped")
+        showStandardStreams = true
+    }
+}
+
+tasks.register<Test>("allureTests") {
+    description = "Запускает UI- и API-сценарии, включённые в Allure-отчёт"
+    useJUnitPlatform {
+        includeTags("AllureTests")
     }
     testLogging {
         events("passed", "failed", "skipped")

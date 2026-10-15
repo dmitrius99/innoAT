@@ -1,6 +1,7 @@
 package pages.assertions;
 
 import com.codeborne.selenide.Condition;
+import io.qameta.allure.Step;
 import org.assertj.core.api.AbstractAssert;
 import pages.AdminLoginPage;
 
@@ -8,6 +9,7 @@ import pages.AdminLoginPage;
 public class AdminLoginPageAssert extends AbstractAssert<AdminLoginPageAssert, AdminLoginPage> {
     public AdminLoginPageAssert(AdminLoginPage actual) { super(actual, AdminLoginPageAssert.class); }
 
+    @Step("Проверить, что форма входа видима")
     public AdminLoginPageAssert hasVisibleLoginForm() {
         isNotNull();
         actual.loginInput().shouldBe(Condition.visible);
@@ -16,12 +18,14 @@ public class AdminLoginPageAssert extends AbstractAssert<AdminLoginPageAssert, A
         return this;
     }
 
+    @Step("Проверить введённый логин «{expectedLogin}»")
     public AdminLoginPageAssert hasLogin(String expectedLogin) {
         isNotNull();
         actual.loginInput().shouldHave(Condition.value(expectedLogin));
         return this;
     }
 
+    @Step("Проверить введённый пароль")
     public AdminLoginPageAssert hasPassword(String expectedPassword) {
         isNotNull();
         actual.passwordInput().shouldHave(Condition.value(expectedPassword));

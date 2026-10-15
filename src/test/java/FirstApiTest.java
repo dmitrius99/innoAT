@@ -1,145 +1,59 @@
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.filter.log.LogDetail;
-import io.restassured.http.ContentType;
-import io.restassured.path.json.JsonPath;
-import io.restassured.specification.RequestSpecification;
-import org.assertj.core.api.Assertions;
+import io.qameta.allure.Step;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
-import java.util.List;
-import java.util.ListIterator;
+import support.ApiChecks;
+import support.ApiClient;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.*;
+import java.math.BigDecimal;
 
 @Tag("ApiTestsTask1")
 public class FirstApiTest {
-
     private static final TestConfiguration CONFIG = TestConfiguration.getInstance();
+    private final ApiClient api = new ApiClient(CONFIG.apiUrl(), CONFIG.adminLogin(), CONFIG.adminPassword());
 
     @Test
-        void checkStatusCodeAndBody () {
-        given()
-                .baseUri(CONFIG.apiUrl())
-                .basePath("goods/list")
-                .queryParam("page", "0")
-                .queryParam("size", "10")
-                .header("Accept", "application/json")
-                .log().all()
-        .when()
-                .get()
-        .then()
-                .log().all()
-                .statusCode(200)
-                .body("goods.isEmpty()", is(true));
-    }
-
-    private RequestSpecification basicParams = new RequestSpecBuilder()
-            .setBaseUri(CONFIG.apiUrl())
-            .addQueryParam("page", "0")
-            .addQueryParam("size", "10")
-            .addHeader("Accept", "application/json")
-            .log(LogDetail.ALL)
-            .build();
-
-    @Test
-        void checkStatusCodeAndBodyWithSpec () {
-        given()
-                .spec(basicParams)
-        .when()
-                .get("/goods/list")
-                .then()
-                .log().all()
-                .statusCode(200)
-                .body("goods.isEmpty()", is(true));
+    void checkStatusCodeAndBody() {
+        Response response = api.listGoods(0, 10);
+        ApiChecks.hasStatus(response, 200);
+        checkGoodsListIsEmpty(response);
     }
 
     @Test
-        void createAndCheckGood () {
-        JsonPath responceGoodAdd = given()
-            .baseUri(CONFIG.apiUrl())
-            .basePath("goods/add")
-            .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-            .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .body("""
-                        {
-                          "name": "%s",
-                          "price": %s
-                        }
-                        """.formatted(CONFIG.starterProductName(), CONFIG.starterProductPrice()))
-                .when()
-                .post()
-                .then()
-                .log().all()
-                .statusCode(200)
-                .extract()
-                .jsonPath();
-
-        int goodId = responceGoodAdd.getInt("data.id");
-        System.out.println("Id добавленного товара: " + goodId);
-
-        given()
-                .baseUri(CONFIG.apiUrl())
-                .basePath("goods/list")
-                .header("Accept", "application/json")
-                .queryParam("page", "0")
-                .queryParam("size", "10")
-                .header("Accept", "application/json")
-                .when()
-                .get()
-                .then()
-                .statusCode(200)
-                .body("goods.id", hasItem(goodId));
-        System.out.println("нашел товар с Id:" + goodId);
+    void checkStatusCodeAndBodyWithSpec() {
+        Response response = api.listGoods(0, 10);
+        ApiChecks.hasStatus(response, 200);
+        checkGoodsListIsEmpty(response);
     }
 
     @Test
-    void createAndCheckGoodWithAssertJ () {
-        JsonPath responceGoodAdd = given()
-                .baseUri(CONFIG.apiUrl())
-                .basePath("goods/add")
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .body("""
-                        {
-                          "name": "fsaaros",
-                          "price": 150
-                        }
-                        """)
-                .when()
-                .post()
-                .then()
-                .log().all()
-                .statusCode(200)
-                .extract()
-                .jsonPath();
+    void createAndCheckGood() {
+        String name = CONFIG.starterProductName() + " via API";
+        int id = createGood(name, CONFIG.starterProductPrice());
+        Response response = api.listGoods(0, 100);
+        ApiChecks.hasStatus(response, 200);
+        ApiChecks.containsGood(response, id);
+    }
 
-        int goodId = responceGoodAdd.getInt("data.id");
-        System.out.println("Id созданного товара: " + goodId);
+    @Test
+    void createAndCheckGoodWithAssertJ() {
+        int id = createGood("fsaaros", BigDecimal.valueOf(150));
+        Response response = api.listGoods(0, 100);
+        ApiChecks.hasStatus(response, 200);
+        ApiChecks.containsGood(response, id);
+    }
 
-        JsonPath responceGoodList = given()
-                .baseUri(CONFIG.apiUrl())
-                .basePath("goods/list")
-                .accept(ContentType.JSON)
-                .queryParam("page", "0")
-                .queryParam("size", "100")
-                .when()
-                .get()
-                .then()
-                .log().all()
-                .statusCode(200)
-                .extract()
-                .jsonPath();
+    @Step("Создать товар через API для проверки списка")
+    private int createGood(String name, BigDecimal price) {
+        Response response = api.addGood(name, price);
+        ApiChecks.hasStatus(response, 200);
+        int id = api.createdId(response);
+        ApiChecks.hasPositiveId(id);
+        return id;
+    }
 
-        List<Integer> listId = responceGoodList.getList("goods.id");
-
-        Assertions.assertThat(listId)
-                .as("Созданный товар должен присутствовать в списке")
-                .contains(goodId);
-
-        System.out.println("Нашел товар с Id:" + goodId);
+    @Step("Проверить, что список товаров пуст")
+    private void checkGoodsListIsEmpty(Response response) {
+        org.assertj.core.api.Assertions.assertThat(response.jsonPath().getList("goods")).isEmpty();
     }
 }

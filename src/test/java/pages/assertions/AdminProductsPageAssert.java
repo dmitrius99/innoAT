@@ -2,6 +2,7 @@ package pages.assertions;
 
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.CollectionCondition;
+import io.qameta.allure.Step;
 import org.assertj.core.api.AbstractAssert;
 import pages.AdminProductsPage;
 
@@ -9,6 +10,7 @@ import pages.AdminProductsPage;
 public class AdminProductsPageAssert extends AbstractAssert<AdminProductsPageAssert, AdminProductsPage> {
     public AdminProductsPageAssert(AdminProductsPage actual) { super(actual, AdminProductsPageAssert.class); }
 
+    @Step("Проверить видимость формы добавления товара")
     public AdminProductsPageAssert hasVisibleAddProductForm() {
         isNotNull();
         actual.newProductNameInput().shouldBe(Condition.visible);
@@ -19,18 +21,21 @@ public class AdminProductsPageAssert extends AbstractAssert<AdminProductsPageAss
         return this;
     }
 
+    @Step("Проверить значение названия нового товара «{expectedName}»")
     public AdminProductsPageAssert hasNewProductName(String expectedName) {
         isNotNull();
         actual.newProductNameInput().shouldHave(Condition.value(expectedName));
         return this;
     }
 
+    @Step("Проверить значение цены нового товара {expectedPrice}")
     public AdminProductsPageAssert hasNewProductPrice(String expectedPrice) {
         isNotNull();
         actual.newProductPriceInput().shouldHave(Condition.value(expectedPrice));
         return this;
     }
 
+    @Step("Проверить уведомление «{expectedText}»")
     public AdminProductsPageAssert hasNotification(String expectedText) {
         isNotNull();
         actual.notifications().shouldHave(CollectionCondition.sizeGreaterThan(0));
@@ -38,6 +43,7 @@ public class AdminProductsPageAssert extends AbstractAssert<AdminProductsPageAss
         return this;
     }
 
+    @Step("Проверить название товара с id {productId}: «{expectedName}»")
     public AdminProductsPageAssert hasProductName(int productId, String expectedName) {
         isNotNull();
         actual.productNameInput(productId)

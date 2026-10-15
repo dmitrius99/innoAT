@@ -2,6 +2,7 @@ package pages;
 
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
+import io.qameta.allure.Step;
 import pages.assertions.MainPageAssert;
 
 import java.math.BigDecimal;
@@ -24,30 +25,39 @@ public class MainPage {
     private final SelenideElement makeOrderButton = $("#makeOrder");
     private final ElementsCollection notifications = $$(".toast");
 
+    @Step("Открыть витрину")
     public MainPage open(String baseUrl) {
         com.codeborne.selenide.Selenide.open(baseUrl);
         return this;
     }
 
+    @Step("Открыть административную панель")
     public MainPage openAdministration() { administrationLink.click(); return this; }
+    @Step("Открыть корзину")
     public MainPage openCart() { openCartButton.click(); return this; }
+    @Step("Закрыть корзину")
     public MainPage closeCart() { closeCartButton.click(); return this; }
 
+    @Step("Установить количество товара с id {productId}: {quantity}")
     public MainPage setProductQuantity(int productId, int quantity) {
         productCard(productId).$(".qty-input").setValue(String.valueOf(quantity));
         return this;
     }
 
+    @Step("Добавить {quantity} шт. товара с id {productId} в корзину")
     public MainPage addProductToCart(int productId, int quantity) {
         return setProductQuantity(productId, quantity).addProductToCart(productId);
     }
 
+    @Step("Добавить товар с id {productId} в корзину")
     public MainPage addProductToCart(int productId) {
         productCard(productId).$("button[data-action='add-to-cart']").click();
         return this;
     }
 
+    @Step("Оформить заказ")
     public MainPage checkout() { makeOrderButton.click(); return this; }
+    @Step("Перейти к проверкам витрины")
     public MainPageAssert check() { return new MainPageAssert(this); }
 
     public SelenideElement mainTitle() { return mainTitle; }

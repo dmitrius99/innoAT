@@ -1,5 +1,9 @@
 import com.codeborne.selenide.Configuration;
+import com.codeborne.selenide.logevents.SelenideLogger;
+import io.qameta.allure.selenide.AllureSelenide;
 import io.restassured.RestAssured;
+import io.qameta.allure.Step;
+import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.AfterEach;
@@ -9,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import pages.AdminLoginPage;
 import pages.AdminProductsPage;
 import pages.MainPage;
+import support.ApiChecks;
+import support.ApiClient;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -24,11 +30,13 @@ import static io.restassured.RestAssured.given;
  * действия выполняют PageObject, проверки выполняют PageAssert.
  */
 @Tag("homework")
+@Tag("AllureTests")
 public class SelenideApiHomework {
     private static final TestConfiguration CONFIG = TestConfiguration.getInstance();
 
     private final List<Integer> createdProductIds = new ArrayList<>();
     private Map<String, String> adminCookies;
+    private ApiClient api;
 
     @BeforeEach
     void setUp() {
@@ -36,15 +44,13 @@ public class SelenideApiHomework {
         Configuration.headless = true;
         Configuration.browserSize = "1920x1080";
         Configuration.timeout = CONFIG.elementTimeoutMs();
+        SelenideLogger.addListener("AllureSelenide", new AllureSelenide()
+                .screenshots(true)
+                .savePageSource(true));
         RestAssured.baseURI = CONFIG.apiUrl();
-        adminCookies = given()
-                .redirects().follow(false)
-                .contentType(ContentType.URLENC)
-                .formParam("username", CONFIG.adminLogin())
-                .formParam("password", CONFIG.adminPassword())
-                .post("/login")
-                .then().statusCode(302)
-                .extract().cookies();
+        RestAssured.filters(new AllureRestAssured());
+        api = new ApiClient(CONFIG.apiUrl(), CONFIG.adminLogin(), CONFIG.adminPassword());
+        adminCookies = api.login();
     }
 
     @AfterEach
@@ -53,6 +59,7 @@ public class SelenideApiHomework {
             closeWebDriver();
         } finally {
             deleteCreatedProducts();
+            SelenideLogger.removeListener("AllureSelenide");
         }
     }
 
@@ -123,23 +130,20 @@ public class SelenideApiHomework {
                 .hasProductName(product.id(), changedName);
     }
 
+    @Step("Подготовить товар через API")
     private TestProduct createProductViaApi(BigDecimal price) {
         String productName = "API cup " + UUID.randomUUID();
-        Response response = given()
-                .redirects().follow(false)
-                .cookies(adminCookies)
-                .contentType(ContentType.JSON)
-                .body("{\"name\":\"" + productName + "\",\"price\":" + price.toPlainString() + "}")
-                .post("/goods/add");
-
-        response.then().statusCode(200);
-        int productId = response.jsonPath().getInt("data.id");
+        Response response = api.addGood(productName, price);
+        ApiChecks.hasStatus(response, 200);
+        int productId = api.createdId(response);
+        ApiChecks.hasPositiveId(productId);
         createdProductIds.add(productId);
         return new TestProduct(productId, productName, price);
     }
 
+    @Step("Найти id товара «{productName}» через API")
     private int findProductIdByName(String productName) {
-        List<Map<String, Object>> goods = given().get("/goods/list?page=0&size=1000")
+        List<Map<String, Object>> goods = api.listGoods(0, 1000)
                 .jsonPath().getList("goods");
         Map<String, Object> product = goods.stream()
                 .filter(good -> productName.equals(good.get("name")))
@@ -148,9 +152,10 @@ public class SelenideApiHomework {
         return ((Number) product.get("id")).intValue();
     }
 
+    @Step("Удалить подготовленные товары через API")
     private void deleteCreatedProducts() {
         for (Integer productId : createdProductIds) {
-            given().cookies(adminCookies).delete("/goods/{id}", productId);
+            api.deleteGood(productId);
         }
     }
 

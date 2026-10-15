@@ -2,6 +2,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -40,6 +41,7 @@ public class SeleniumHomework {
     }
 
     @Test
+    @Step("Проверить отображение добавленного товара на витрине")
     void productAddedInAdminIsShownOnStorefront() {
         String productName = createProductInAdmin();
 
@@ -54,6 +56,7 @@ public class SeleniumHomework {
     }
 
     @Test
+    @Step("Проверить добавление товара в корзину")
     void productAddedToCartIsShownInCart() {
         String productName = createProductInAdmin();
         driver.get(CONFIG.standUrl());
@@ -67,6 +70,7 @@ public class SeleniumHomework {
     }
 
     @Test
+    @Step("Проверить отказ при неверных учётных данных")
     void cannotLoginToAdminWithInvalidCredentials() {
         driver.get(CONFIG.standUrl() + "/admin");
 
@@ -81,6 +85,7 @@ public class SeleniumHomework {
     }
 
     @Test
+    @Step("Проверить сохранение корзины после обновления страницы")
     void productsRemainInCartAfterPageRefresh() {
         String productName = createProductInAdmin();
         driver.get(CONFIG.standUrl());
@@ -95,6 +100,7 @@ public class SeleniumHomework {
                 "Товар должен остаться в корзине после обновления страницы");
     }
 
+    @Step("Создать товар в админ-панели")
     private String createProductInAdmin() {
         String productName = CONFIG.starterProductName() + " " + System.currentTimeMillis();
 
@@ -112,6 +118,7 @@ public class SeleniumHomework {
         return productName;
     }
 
+    @Step("Авторизоваться в админ-панели")
     private void loginToAdmin() {
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")))
                 .sendKeys(CONFIG.adminLogin());
@@ -121,6 +128,7 @@ public class SeleniumHomework {
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("n-name")));
     }
 
+    @Step("Добавить товар «{productName}» в корзину")
     private void addProductToCart(String productName) {
         WebElement productCard = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.cssSelector(".product-card[data-name='" + productName + "']")

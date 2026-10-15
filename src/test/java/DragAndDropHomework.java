@@ -2,6 +2,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import io.qameta.allure.Step;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
@@ -42,6 +43,7 @@ public class DragAndDropHomework {
     }
 
     @Test
+    @Step("Проверить перетаскивание товара в корзину")
     void productCanBeDraggedToCart() {
         String productName = createProductInAdmin();
 
@@ -58,6 +60,7 @@ public class DragAndDropHomework {
     }
 
     @Test
+    @Step("Проверить удаление товара из корзины")
     void productCanBeRemovedFromCart() {
         String productName = createProductInAdmin();
 
@@ -75,6 +78,7 @@ public class DragAndDropHomework {
                 "Удалённый товар не должен отображаться в корзине");
     }
 
+    @Step("Создать товар в админ-панели")
     private String createProductInAdmin() {
         String productName = CONFIG.starterProductName() + " " + UUID.randomUUID();
 
@@ -94,6 +98,7 @@ public class DragAndDropHomework {
         return productName;
     }
 
+    @Step("Перетащить товар «{productName}» в корзину")
     private String dragProductToCart(String productName) {
         WebElement productCard = wait.until(ExpectedConditions.visibilityOfElementLocated(
                 By.cssSelector(".product-card[data-name='" + productName + "']")

@@ -1,274 +1,99 @@
-import io.restassured.http.ContentType;
+import io.qameta.allure.Step;
 import io.restassured.response.Response;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import java.util.List;
+import support.ApiChecks;
+import support.ApiClient;
+
+import java.math.BigDecimal;
 import java.util.UUID;
 
-import static io.restassured.RestAssured.given;
-import static org.assertj.core.api.Assertions.assertThat;
-
 @Tag("ApiTests")
+@Tag("AllureTests")
 public class GoodsApiTest {
-
     private static final TestConfiguration CONFIG = TestConfiguration.getInstance();
+    private final ApiClient api = new ApiClient(CONFIG.apiUrl(), CONFIG.adminLogin(), CONFIG.adminPassword());
 
     @Test
     void addGoodReturns200AndCreatedId() {
-        String name = CONFIG.starterProductName() + "-" + UUID.randomUUID();
-
-        Response response = given()
-                .baseUri(CONFIG.apiUrl())
-                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .body("""
-                        {
-                          "name": "%s",
-                          "price": %s
-                        }
-                        """.formatted(name, CONFIG.starterProductPrice()))
-        .when()
-                .post("/goods/add");
-
-        Integer createdId = response.jsonPath().getObject("data.id", Integer.class);
-
-        assertThat(response.statusCode())
-                .as("Статус ответа при создании товара")
-                .isEqualTo(200);
-        assertThat(createdId)
-                .as("ID созданного товара")
-                .isNotNull()
-                .isPositive();
+        Response response = api.addGood(uniqueName(), CONFIG.starterProductPrice());
+        ApiChecks.hasStatus(response, 200);
+        ApiChecks.hasPositiveId(api.createdId(response));
     }
 
     @Test
     void addGoodWithoutRequiredNameReturns400() {
-        Response response = given()
-                .baseUri(CONFIG.apiUrl())
-                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .body("""
-                        {
-                          "price": 100.0
-                        }
-                        """)
-        .when()
-                .post("/goods/add");
-
-        assertThat(response.statusCode())
-                .as("Статус ответа при создании товара без обязательного name")
-                .isEqualTo(400);
-        assertThat(response.getBody().asString())
-                .as("Тело ответа с ошибкой")
-                .isNotBlank();
+        Response response = api.addGoodWithoutName(BigDecimal.valueOf(100));
+        ApiChecks.hasStatus(response, 400);
+        ApiChecks.hasNonEmptyBody(response);
     }
 
-    //метод для создания тестового товара для гарантии что
-    //тесты получения изменения удаления товара не зависит от прежних запусков и содержимого базы
-    private int createGood(String name, double price) {
-        Response response = given()
-                .baseUri(CONFIG.apiUrl())
-                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .body("""
-                        {
-                          "name": "%s",
-                          "price": %s
-                        }
-                        """.formatted(name, price))
-                .when()
-                .post("/goods/add");
-
-        Integer createdId = response.jsonPath().getInt("data.id");
-
-        assertThat(response.statusCode())
-                .as("Статус ответа при подготовке товара")
-                .isEqualTo(200);
-        assertThat(createdId)
-                .as("ID подготовленного товара")
-                .isNotNull()
-                .isPositive();
-
-        return createdId;
-    }
-    
     @Test
     void getGoodByExistingIdReturns200AndGoodData() {
-        String name = "good-" + UUID.randomUUID();
-        int createdId = createGood(name, 100.0);
-
-        Response response = given()
-                .baseUri(CONFIG.apiUrl())
-                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .accept(ContentType.JSON)
-                .pathParam("id", createdId)
-        .when()
-                .get("/goods/{id}");
-
-        assertThat(response.statusCode())
-                .as("Статус ответа при получении существующего товара")
-                .isEqualTo(200);
-        assertThat(response.jsonPath().getInt("id"))
-                .as("ID товара в ответе")
-                .isEqualTo(createdId);
-        assertThat(response.jsonPath().getString("name"))
-                .as("Название товара в ответе")
-                .isEqualTo(name);
+        String name = uniqueName();
+        int id = createGood(name, BigDecimal.valueOf(100));
+        Response response = api.getGood(id);
+        ApiChecks.hasStatus(response, 200);
+        ApiChecks.hasGoodData(response, id, name, 100);
     }
 
     @Test
     void getGoodByMissingIdReturns404() {
-        Response response = given()
-                .baseUri(CONFIG.apiUrl())
-                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .accept(ContentType.JSON)
-                .pathParam("id", -1)
-        .when()
-                .get("/goods/{id}");
-
-        assertThat(response.statusCode())
-                .as("Статус ответа при получении несуществующего товара")
-                .isEqualTo(404);
-        assertThat(response.getBody().asString())
-                .as("Тело ответа об отсутствующем товаре")
-                .isNotBlank();
+        Response response = api.getGood(-1);
+        ApiChecks.hasStatus(response, 404);
+        ApiChecks.hasNonEmptyBody(response);
     }
 
     @Test
     void patchExistingGoodReturns200AndUpdatedData() {
-        int createdId = createGood("good-" + UUID.randomUUID(), 100.0);
-        String updatedName = "updated-good-" + UUID.randomUUID();
-
-        Response response = given()
-                .baseUri(CONFIG.apiUrl())
-                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .pathParam("id", createdId)
-                .body("""
-                        {
-                          "name": "%s",
-                          "price": 250.0
-                        }
-                        """.formatted(updatedName))
-        .when()
-                .patch("/goods/{id}");
-
-        assertThat(response.statusCode())
-                .as("Статус ответа при обновлении существующего товара")
-                .isEqualTo(200);
-        assertThat(response.jsonPath().getInt("id"))
-                .as("ID обновлённого товара")
-                .isEqualTo(createdId);
-        assertThat(response.jsonPath().getString("name"))
-                .as("Новое название товара")
-                .isEqualTo(updatedName);
-        assertThat(response.jsonPath().getDouble("price"))
-                .as("Новая цена товара")
-                .isEqualTo(250.0);
+        int id = createGood(uniqueName(), BigDecimal.valueOf(100));
+        String updatedName = "updated-" + UUID.randomUUID();
+        Response response = api.updateGood(id, updatedName, BigDecimal.valueOf(250));
+        ApiChecks.hasStatus(response, 200);
+        ApiChecks.hasGoodData(response, id, updatedName, 250);
     }
 
     @Test
     void patchGoodWithoutRequiredNameReturns400() {
-        int createdId = createGood("good-" + UUID.randomUUID(), 100.0);
-
-        Response response = given()
-                .baseUri(CONFIG.apiUrl())
-                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .pathParam("id", createdId)
-                .body("""
-                        {
-                          "price": 250.0
-                        }
-                        """)
-        .when()
-                .patch("/goods/{id}");
-
-        assertThat(response.statusCode())
-                .as("Статус ответа при обновлении товара без обязательного name")
-                .isEqualTo(400);
+        int id = createGood(uniqueName(), BigDecimal.valueOf(100));
+        ApiChecks.hasStatus(api.updateGoodWithoutName(id, BigDecimal.valueOf(250)), 400);
     }
 
     @Test
     void patchGoodByMissingIdReturns404() {
-        Response response = given()
-                .baseUri(CONFIG.apiUrl())
-                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .accept(ContentType.JSON)
-                .contentType(ContentType.JSON)
-                .pathParam("id", -1)
-                .body("""
-                        {
-                          "name": "missing-good",
-                          "price": 250.0
-                        }
-                        """)
-        .when()
-                .patch("/goods/{id}");
-
-        assertThat(response.statusCode())
-                .as("Статус ответа при обновлении несуществующего товара")
-                .isEqualTo(404);
+        ApiChecks.hasStatus(api.updateGood(-1, "missing-good", BigDecimal.valueOf(250)), 404);
     }
 
     @Test
     void deleteExistingGoodReturns200AndRemovesGood() {
-        int createdId = createGood("good-" + UUID.randomUUID(), 100.0);
-
-        Response deleteResponse = given()
-                .baseUri(CONFIG.apiUrl())
-                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .accept(ContentType.JSON)
-                .pathParam("id", createdId)
-        .when()
-                .delete("/goods/{id}");
-
-        assertThat(deleteResponse.statusCode())
-                .as("Статус ответа при удалении существующего товара")
-                .isEqualTo(200);
-
+        int id = createGood(uniqueName(), BigDecimal.valueOf(100));
+        ApiChecks.hasStatus(api.deleteGood(id), 200);
     }
 
     @Test
     void deleteGoodByMissingIdReturns404() {
-        Response response = given()
-                .baseUri(CONFIG.apiUrl())
-                .auth().basic(CONFIG.adminLogin(), CONFIG.adminPassword())
-                .accept(ContentType.JSON)
-                .pathParam("id", -1)
-        .when()
-                .delete("/goods/{id}");
-
-        assertThat(response.statusCode())
-                .as("Статус ответа при удалении несуществующего товара")
-                .isEqualTo(404);
+        ApiChecks.hasStatus(api.deleteGood(-1), 404);
     }
 
     @Test
     void listGoodsReturns200AndContainsCreatedGood() {
-        int createdId = createGood("good-" + UUID.randomUUID(), 100.0);
-
-        Response response = given()
-                .baseUri(CONFIG.apiUrl())
-                .accept(ContentType.JSON)
-                .queryParam("page", 0)
-                .queryParam("size", 100)
-                .when()
-                .get("/goods/list");
-
-        List<Integer> goodsIds = response.jsonPath().getList("goods.id", Integer.class);
-
-        assertThat(response.statusCode())
-                .as("Статус ответа при получении списка товаров")
-                .isEqualTo(200);
-        assertThat(goodsIds)
-                .as("Список товаров должен содержать только что созданный товар")
-                .contains(createdId);
+        int id = createGood(uniqueName(), BigDecimal.valueOf(100));
+        Response response = api.listGoods(0, 100);
+        ApiChecks.hasStatus(response, 200);
+        ApiChecks.containsGood(response, id);
     }
 
+    @Step("Подготовить тестовый товар через API")
+    private int createGood(String name, BigDecimal price) {
+        Response response = api.addGood(name, price);
+        ApiChecks.hasStatus(response, 200);
+        int id = api.createdId(response);
+        ApiChecks.hasPositiveId(id);
+        return id;
+    }
+
+    @Step("Сгенерировать уникальное название тестового товара")
+    private String uniqueName() {
+        return "good-" + UUID.randomUUID();
+    }
 }

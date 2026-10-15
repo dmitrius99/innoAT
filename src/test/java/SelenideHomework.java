@@ -1,5 +1,6 @@
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.SelenideElement;
+import io.qameta.allure.Step;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -35,6 +36,7 @@ public class SelenideHomework {
     }
 
     @Test
+    @Step("Проверить отображение добавленного товара на витрине")
     void productAddedInAdminIsShownOnStorefront() {
         String productName = createStarterProductInAdmin();
 
@@ -44,6 +46,7 @@ public class SelenideHomework {
     }
 
     @Test
+    @Step("Проверить добавление товара в корзину")
     void productAddedToCartIsShownInCart() {
         String productName = createProductInAdmin(100);
 
@@ -55,6 +58,7 @@ public class SelenideHomework {
     }
 
     @Test
+    @Step("Проверить отказ при неверных учётных данных")
     void cannotLoginToAdminWithInvalidCredentials() {
         open(CONFIG.standUrl() + "/admin");
 
@@ -67,6 +71,7 @@ public class SelenideHomework {
     }
 
     @Test
+    @Step("Проверить сохранение корзины после обновления страницы")
     void productsRemainInCartAfterPageRefresh() {
         String productName = createProductInAdmin(100);
 
@@ -79,6 +84,7 @@ public class SelenideHomework {
     }
 
     @Test
+    @Step("Проверить предупреждение при сумме заказа больше лимита")
     void alertIsShownWhenOrderCostsMoreThan300Rubles() {
         String productName = createProductInAdmin(301);
 
@@ -90,6 +96,7 @@ public class SelenideHomework {
         confirm("[SmartShop]: Денег не хватает! Сумма 301 ₽ превышает лимит 300 ₽.");
     }
 
+    @Step("Создать товар в админ-панели по цене {price}")
     private String createProductInAdmin(int price) {
         String productName = "Cup " + UUID.randomUUID();
 
@@ -103,6 +110,7 @@ public class SelenideHomework {
         return productName;
     }
 
+    @Step("Создать стартовый товар в админ-панели")
     private String createStarterProductInAdmin() {
         String productName = CONFIG.starterProductName() + " " + UUID.randomUUID();
 
@@ -116,6 +124,7 @@ public class SelenideHomework {
         return productName;
     }
 
+    @Step("Авторизоваться в админ-панели")
     private void loginToAdmin() {
         $("#username").setValue(CONFIG.adminLogin());
         $("#password").setValue(CONFIG.adminPassword());
@@ -124,6 +133,7 @@ public class SelenideHomework {
         $("#n-name").shouldBe(visible);
     }
 
+    @Step("Добавить товар «{productName}» в корзину")
     private void addProductToCart(String productName) {
         SelenideElement productCard = $(".product-card[data-name='" + productName + "']")
                 .shouldBe(visible);
